@@ -12,6 +12,7 @@ import android.os.StrictMode;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RadioButton;
@@ -25,7 +26,7 @@ import com.goebl.david.Response;
 import com.goebl.david.Webb;
 
 
-
+import com.rscja.deviceapi.BuildConfig;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 
@@ -40,15 +41,15 @@ public class RFIDScanActivity extends Activity {
     private boolean loopFlag = false;
     private int inventoryFlag = 1;
     private Handler handler;
-    private ArrayList<HashMap<String, String>> tagList;
-    ArrayList<HashMap<String, String>> products;
-    private SimpleAdapter adapter;
+    private ArrayList<Product> products;
+    private BaseAdapter adapter;
 
     private TextView tv_count;
 
     private RadioGroup RgInventory;
     private RadioButton RbInventorySingle;
     private RadioButton RbInventoryLoop;
+    private final String HOST = "http://172.16.5.154:8080";
 
     private Button BtClear;
     private Button BtImport;
@@ -74,8 +75,6 @@ public class RFIDScanActivity extends Activity {
             setContentView(R.layout.activity_rfid_scan);
             setTitle(getString(R.string.app_name) + " " + BuildConfig.VERSION_NAME);
 
-            tagList = new ArrayList<HashMap<String, String>>();
-
             BtClear = (Button) findViewById(R.id.BtClear);
             BtImport = (Button) findViewById(R.id.BtImport);
             BtView = (Button) findViewById(R.id.BtView);
@@ -86,9 +85,7 @@ public class RFIDScanActivity extends Activity {
             BtInventory = (Button) findViewById(R.id.BtInventory);
             LvTags = (ListView) findViewById(R.id.LvTags);
              products=initTag();
-            adapter = new SimpleAdapter(this, products, R.layout.listtag_items,
-                    new String[]{"tagUii", "tagLen", "tagCount"},
-                    new int[]{R.id.TvTagUii, R.id.TvTagLen, R.id.TvTagCount});
+            adapter = new ListTagView(this,products);
 
             BtClear.setOnClickListener(new BtClearClickListener());
             BtImport.setOnClickListener(new BtImportClickListener());
@@ -117,16 +114,16 @@ public class RFIDScanActivity extends Activity {
             UIHelper.showExceptionError(RFIDScanActivity.this, ex);
         }
     }
-    public ArrayList<HashMap<String, String>> initTag(){
+    public ArrayList<Product> initTag(){
         Webb webb = Webb.create();
-        webb.setBaseUri("http://192.168.246.45:8080");
+        webb.setBaseUri(HOST);
 
         Response<JSONObject> response = webb
                 .get("/products")
                 .ensureSuccess()
                 .asJsonObject();
         JSONObject object = response.getBody();
-        ArrayList<HashMap<String, String>> result= new ArrayList<>();
+        ArrayList<Product> result= new ArrayList<>();
         try {
             JSONArray data = object.getJSONArray("data");
             for (int i=0; i < data.length(); i++) {
@@ -135,11 +132,13 @@ public class RFIDScanActivity extends Activity {
                 JSONArray tagArray= product.getJSONArray("tags");
                 for (int j=0; j < tagArray.length(); j++) {
                     JSONObject tag=  tagArray.getJSONObject(j);
-                    HashMap<String, String> map= new HashMap<>();
-                    map.put("tagUii", tag.getString("tagId")+"\n ( product id:"+product.getString("productId")+")");
-                    map.put("tagCount", "0"+"- stock: "+product.getString("stock"));
-                    map.put("tagRssi", "");
-                    result.add(map);
+                    Product item= new Product();
+                    item.setProductId(product.getString("productId"));
+                    item.setTagId(tag.getString("tagId"));
+                    item.setName(tag.getString("name"));
+                    item.setStock(tag.getInt("stock"));
+                    item.setCount(0);
+                    result.add(item);
                 }
 
 
@@ -239,20 +238,12 @@ public class RFIDScanActivity extends Activity {
         if (!TextUtils.isEmpty(epc)) {
             int index = checkIsExist(epc);
 
-            map = new HashMap<String, String>();
-            map.put("tagUii", epc);
-            map.put("tagCount", String.valueOf(1));
-            map.put("tagRssi", rssi);
-
             if (index == -1) {
-                tagList.add(map);
-                LvTags.setAdapter(adapter);
-                tv_count.setText("" + adapter.getCount());
+                UIHelper.ToastMessage(RFIDScanActivity.this, "can not find product id");
             } else {
-                int tagcount = Integer.parseInt(tagList.get(index).get("tagCount"), 10) + 1;
+                int tagcount = products.get(index).getCount() + 1;
 
-                map.put("tagCount", String.valueOf(tagcount));
-                tagList.set(index, map);
+                products.get(index).setCount(tagcount);
             }
 
             adapter.notifyDataSetChanged();
@@ -276,7 +267,7 @@ public class RFIDScanActivity extends Activity {
         @Override
         public void onClick(View v) {
             if (BtInventory.getText().equals(getString(R.string.btInventory))) {
-                if (tagList.size() == 0) {
+                if (products.size() == 0) {
                     UIHelper.ToastMessage(RFIDScanActivity.this, "No data");
                     return;
                 }
@@ -286,12 +277,12 @@ public class RFIDScanActivity extends Activity {
                 try {
 
                         JSONArray jsonArray = new JSONArray();
-                        tagList.stream().forEach(t -> {
+                        products.stream().forEach(t -> {
                             try {
                                 JSONObject jsonObject = new JSONObject();
-                                jsonObject.put("tagId", t.get("tagUii"));
-                                jsonObject.put("count", t.get("tagCount"));
-                                jsonObject.put("rssi", t.get("tagRssi"));
+                                jsonObject.put("tagId", t.getTagId());
+                                jsonObject.put("count", t.getCount());
+                                jsonObject.put("rssi","none");
 
                                 jsonArray.put(jsonObject);
                             } catch (JSONException e) {
@@ -299,7 +290,7 @@ public class RFIDScanActivity extends Activity {
                             }
                         });
                         Webb webb = Webb.create();
-                        webb.setBaseUri("http://192.168.246.45:8080");
+                        webb.setBaseUri(HOST);
 
                     Response<JSONObject> response = webb
                                 .post("/products/tags")
@@ -308,18 +299,15 @@ public class RFIDScanActivity extends Activity {
                                 .asJsonObject();
 //
                     // save excel file
-                    boolean reXls = FileImport.SaveFileXls(tagList, "");
-                    boolean re = FileImport.SaveFileTxt(tagList, ""); // save txt file
-                    if (re) {
+
+//                    if (response.getBody().has("data")) {
                         fCurFilePath = FileImport.FilePathTxt;
                         UIHelper.ToastMessage(RFIDScanActivity.this, getString(R.string.uhf_msg_inventory_save_success));
                         tv_count.setText("0");
-                        tagList.clear();
+                        products.clear();
                         adapter.notifyDataSetChanged();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                } catch (Exception ex) {
+//                    }
+                }  catch (Exception ex) {
                     UIHelper.showExceptionError(RFIDScanActivity.this, ex);
                 }
             } else {
@@ -347,7 +335,7 @@ public class RFIDScanActivity extends Activity {
 
     private void clearData() {
         tv_count.setText("0");
-        tagList.clear();
+        products.clear();
 
         adapter.notifyDataSetChanged();
     }
@@ -439,11 +427,10 @@ public class RFIDScanActivity extends Activity {
             return existFlag;
         }
         String tempStr = "";
-        for (int i = 0; i < tagList.size(); i++) {
-            HashMap<String, String> temp = new HashMap<String, String>();
-            temp = tagList.get(i);
-            tempStr = temp.get("tagUii");
-            if (strEPC.equals(tempStr)) {
+        for (int i = 0; i < products.size(); i++) {
+           Product temp = new Product();
+            temp = products.get(i);
+            if (strEPC.equals(temp.getTagId())) {
                 existFlag = i;
                 break;
             }
