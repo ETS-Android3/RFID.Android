@@ -42,7 +42,7 @@ public class RFIDScanActivity extends Activity {
     private int inventoryFlag = 1;
     private Handler handler;
     private ArrayList<Product> products;
-    private BaseAdapter adapter;
+    private ListTagView adapter;
 
     private TextView tv_count;
 
@@ -124,7 +124,17 @@ public class RFIDScanActivity extends Activity {
                 .asJsonObject();
         JSONObject object = response.getBody();
         ArrayList<Product> result= new ArrayList<>();
-        try {
+//        Product p1= new Product("122312313213","312313213231","table",3,5);
+//        Product p2= new Product("122312313214","312313213232","table",3,5);
+//        Product p3= new Product("122312313215","312313213233","table",3,5);
+//        Product p4= new Product("122312313216","312313213234","table",3,5);
+//        Product p5= new Product("122312313217","312313213235","table",3,5);
+//        result.add(p1);
+//        result.add(p2);
+//        result.add(p3);
+//        result.add(p4);
+//        result.add(p5);
+                try {
             JSONArray data = object.getJSONArray("data");
             for (int i=0; i < data.length(); i++) {
 

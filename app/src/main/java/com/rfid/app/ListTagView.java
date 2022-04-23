@@ -23,17 +23,17 @@ public class ListTagView extends BaseAdapter {
     }
     @Override
     public int getCount() {
-        return 0;
+        return listData.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return null;
+        return listData.get(i);
     }
 
     @Override
     public long getItemId(int i) {
-        return 0;
+        return i;
     }
 
     @Override
@@ -60,16 +60,6 @@ public class ListTagView extends BaseAdapter {
         holder.count.setText(product.getCount());
 
         return convertView;
-    }
-
-
-    // Find Image ID corresponding to the name of the image (in the directory mipmap).
-    public int getMipmapResIdByName(String resName)  {
-        String pkgName = context.getPackageName();
-        // Return 0 if not found.
-        int resID = context.getResources().getIdentifier(resName , "mipmap", pkgName);
-        Log.i("CustomListView", "Res Name: "+ resName+"==> Res ID = "+ resID);
-        return resID;
     }
 
     static class ViewHolder {

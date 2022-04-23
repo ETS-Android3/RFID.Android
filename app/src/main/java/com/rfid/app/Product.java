@@ -7,6 +7,17 @@ public class Product {
     private Integer stock;
     private Integer count;
 
+    public Product() {
+    }
+
+    public Product(String productId, String tagId, String name, Integer stock, Integer count) {
+        this.productId = productId;
+        this.tagId = tagId;
+        this.name = name;
+        this.stock = stock;
+        this.count = count;
+    }
+
     public String getProductId() {
         return productId;
     }
