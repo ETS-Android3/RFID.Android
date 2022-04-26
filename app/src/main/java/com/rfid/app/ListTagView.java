@@ -56,8 +56,8 @@ public class ListTagView extends BaseAdapter {
         holder.productId.setText(product.getProductId());
         holder.tagId.setText(product.getTagId());
         holder.name.setText(product.getName());
-        holder.stock.setText(product.getStock());
-        holder.count.setText(product.getCount());
+        holder.stock.setText(String.valueOf(product.getStock()));
+        holder.count.setText(String.valueOf(product.getCount()));
 
         return convertView;
     }

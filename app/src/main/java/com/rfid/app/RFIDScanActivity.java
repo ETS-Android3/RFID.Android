@@ -49,7 +49,7 @@ public class RFIDScanActivity extends Activity {
     private RadioGroup RgInventory;
     private RadioButton RbInventorySingle;
     private RadioButton RbInventoryLoop;
-    private final String HOST = "http://172.16.5.154:8080";
+    private final String HOST = "http://192.168.1.5:8080";
 
     private Button BtClear;
     private Button BtImport;
@@ -84,8 +84,8 @@ public class RFIDScanActivity extends Activity {
             RbInventoryLoop = (RadioButton) findViewById(R.id.RbInventoryLoop);
             BtInventory = (Button) findViewById(R.id.BtInventory);
             LvTags = (ListView) findViewById(R.id.LvTags);
-             products=initTag();
-            adapter = new ListTagView(this,products);
+            products = initTag();
+            adapter = new ListTagView(this, products);
 
             BtClear.setOnClickListener(new BtClearClickListener());
             BtImport.setOnClickListener(new BtImportClickListener());
@@ -94,7 +94,7 @@ public class RFIDScanActivity extends Activity {
             BtView.setOnClickListener(new BtViewClickListener());
 
             LvTags.setAdapter(adapter);
-            clearData();
+//            clearData();
 
             handler = new Handler() {
                 @SuppressLint("HandlerLeak")
@@ -114,7 +114,8 @@ public class RFIDScanActivity extends Activity {
             UIHelper.showExceptionError(RFIDScanActivity.this, ex);
         }
     }
-    public ArrayList<Product> initTag(){
+
+    public ArrayList<Product> initTag() {
         Webb webb = Webb.create();
         webb.setBaseUri(HOST);
 
@@ -123,30 +124,21 @@ public class RFIDScanActivity extends Activity {
                 .ensureSuccess()
                 .asJsonObject();
         JSONObject object = response.getBody();
-        ArrayList<Product> result= new ArrayList<>();
-//        Product p1= new Product("122312313213","312313213231","table",3,5);
-//        Product p2= new Product("122312313214","312313213232","table",3,5);
-//        Product p3= new Product("122312313215","312313213233","table",3,5);
-//        Product p4= new Product("122312313216","312313213234","table",3,5);
-//        Product p5= new Product("122312313217","312313213235","table",3,5);
-//        result.add(p1);
-//        result.add(p2);
-//        result.add(p3);
-//        result.add(p4);
-//        result.add(p5);
-                try {
-            JSONArray data = object.getJSONArray("data");
-            for (int i=0; i < data.length(); i++) {
+        ArrayList<Product> result = new ArrayList<>();
 
-                JSONObject product=  data.getJSONObject(i);
-                JSONArray tagArray= product.getJSONArray("tags");
-                for (int j=0; j < tagArray.length(); j++) {
-                    JSONObject tag=  tagArray.getJSONObject(j);
-                    Product item= new Product();
+        try {
+            JSONArray data = object.getJSONArray("data");
+            for (int i = 0; i < data.length(); i++) {
+
+                JSONObject product = data.getJSONObject(i);
+                JSONArray tagArray = product.getJSONArray("tags");
+                for (int j = 0; j < tagArray.length(); j++) {
+                    JSONObject tag = tagArray.getJSONObject(j);
+                    Product item = new Product();
                     item.setProductId(product.getString("productId"));
                     item.setTagId(tag.getString("tagId"));
-                    item.setName(tag.getString("name"));
-                    item.setStock(tag.getInt("stock"));
+                    item.setName(product.getString("name"));
+                    item.setStock(product.getInt("stock"));
                     item.setCount(0);
                     result.add(item);
                 }
@@ -156,8 +148,9 @@ public class RFIDScanActivity extends Activity {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        return  result;
+        return result;
     }
+
     public void initUHF() {
         // temporary check this, on emulator device mReader InitTask cause crash application
         if (!fIsEmulator) {
@@ -286,38 +279,38 @@ public class RFIDScanActivity extends Activity {
 //                 boolean re = FileImport.SaveSQL(tagList, RFIDScanActivity.this);
                 try {
 
-                        JSONArray jsonArray = new JSONArray();
-                        products.stream().forEach(t -> {
-                            try {
-                                JSONObject jsonObject = new JSONObject();
-                                jsonObject.put("tagId", t.getTagId());
-                                jsonObject.put("count", t.getCount());
-                                jsonObject.put("rssi","none");
+                    JSONArray jsonArray = new JSONArray();
+                    products.stream().forEach(t -> {
+                        try {
+                            JSONObject jsonObject = new JSONObject();
+                            jsonObject.put("tagId", t.getTagId());
+                            jsonObject.put("count", t.getCount());
+                            jsonObject.put("rssi", "none");
 
-                                jsonArray.put(jsonObject);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        });
-                        Webb webb = Webb.create();
-                        webb.setBaseUri(HOST);
+                            jsonArray.put(jsonObject);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    Webb webb = Webb.create();
+                    webb.setBaseUri(HOST);
 
                     Response<JSONObject> response = webb
-                                .post("/products/tags")
-                                .body(jsonArray)
-                                .ensureSuccess()
-                                .asJsonObject();
+                            .post("/products/tags")
+                            .body(jsonArray)
+                            .ensureSuccess()
+                            .asJsonObject();
 //
                     // save excel file
 
 //                    if (response.getBody().has("data")) {
-                        fCurFilePath = FileImport.FilePathTxt;
-                        UIHelper.ToastMessage(RFIDScanActivity.this, getString(R.string.uhf_msg_inventory_save_success));
-                        tv_count.setText("0");
-                        products.clear();
-                        adapter.notifyDataSetChanged();
+                    fCurFilePath = FileImport.FilePathTxt;
+                    UIHelper.ToastMessage(RFIDScanActivity.this, getString(R.string.uhf_msg_inventory_save_success));
+                    tv_count.setText("0");
+                    products.clear();
+                    adapter.notifyDataSetChanged();
 //                    }
-                }  catch (Exception ex) {
+                } catch (Exception ex) {
                     UIHelper.showExceptionError(RFIDScanActivity.this, ex);
                 }
             } else {
@@ -345,7 +338,7 @@ public class RFIDScanActivity extends Activity {
 
     private void clearData() {
         tv_count.setText("0");
-        products.clear();
+//        products.clear();
 
         adapter.notifyDataSetChanged();
     }
@@ -438,7 +431,7 @@ public class RFIDScanActivity extends Activity {
         }
         String tempStr = "";
         for (int i = 0; i < products.size(); i++) {
-           Product temp = new Product();
+            Product temp = new Product();
             temp = products.get(i);
             if (strEPC.equals(temp.getTagId())) {
                 existFlag = i;
