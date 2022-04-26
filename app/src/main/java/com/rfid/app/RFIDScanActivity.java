@@ -339,7 +339,9 @@ public class RFIDScanActivity extends Activity {
     private void clearData() {
         tv_count.setText("0");
         products = initTag();
+        adapter = new ListTagView(this, products);
         adapter.notifyDataSetChanged();
+        LvTags.setAdapter(adapter);
     }
 
     public class RgInventoryCheckedListener implements RadioGroup.OnCheckedChangeListener {
