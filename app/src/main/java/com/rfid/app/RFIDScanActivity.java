@@ -139,6 +139,7 @@ public class RFIDScanActivity extends Activity {
                     item.setTagId(tag.getString("tagId"));
                     item.setName(product.getString("name"));
                     item.setStock(product.getInt("stock"));
+                    item.setColor(tag.getString("color"));
                     item.setCount(0);
                     result.add(item);
                 }

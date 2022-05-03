@@ -6,16 +6,26 @@ public class Product {
     private String name;
     private Integer stock;
     private Integer count;
+    private String color;
 
     public Product() {
     }
 
-    public Product(String productId, String tagId, String name, Integer stock, Integer count) {
+    public Product(String productId, String tagId, String name, Integer stock, Integer count,String color) {
         this.productId = productId;
         this.tagId = tagId;
         this.name = name;
         this.stock = stock;
         this.count = count;
+        this.color= color;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public String getProductId() {

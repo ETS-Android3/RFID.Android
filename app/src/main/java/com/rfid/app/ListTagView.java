@@ -44,6 +44,7 @@ public class ListTagView extends BaseAdapter {
             holder = new ViewHolder();
             holder.productId = (TextView) convertView.findViewById(R.id.TvProductId);
             holder.tagId = (TextView) convertView.findViewById(R.id.TvTagUii);
+            holder.color = (TextView) convertView.findViewById(R.id.TvColor);
             holder.name = (TextView) convertView.findViewById(R.id.TvName);
             holder.stock = (TextView) convertView.findViewById(R.id.TvStock);
             holder.count = (TextView) convertView.findViewById(R.id.TvTagCount);
@@ -58,6 +59,7 @@ public class ListTagView extends BaseAdapter {
         holder.name.setText(product.getName());
         holder.stock.setText(String.valueOf(product.getStock()));
         holder.count.setText(String.valueOf(product.getCount()));
+        holder.color.setText(product.getColor());
 
         return convertView;
     }
@@ -68,6 +70,8 @@ public class ListTagView extends BaseAdapter {
         TextView name;
         TextView stock;
         TextView count;
+        TextView color;
+
     }
 
 }
